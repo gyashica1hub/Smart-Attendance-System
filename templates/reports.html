@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="form-container">
+
+<div class="form-card">
+
+<h1>📊 Attendance Reports</h1>
+
+{% for date, students in grouped_data.items() %}
+
+<div class="report-box">
+
+    <h2>📅 {{ date }}</h2>
+
+    <h3 style="color:green;">
+        Present Count: {{ students|length }}
+    </h3>
+
+    <table>
+
+        <tr>
+            <th>Student Name</th>
+            <th>Roll No</th>
+        </tr>
+
+        {% for student in students %}
+
+        <tr>
+            <td>{{ student.name }}</td>
+            <td>{{ student.roll }}</td>
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="main">
+
+    <div class="form-container">
+
+        <div class="form-card">
+
+            <h1>👤 Teacher Profile</h1>
+
+            <div class="profile-box">
+
+                <h2>{{ teacher[0] }}</h2>
+
+                <p>Logged In Teacher</p>
+
+            </div>
+
+            <a href="/change_password">
+                <button>
+                    🔒 Change Password
+                </button>
+            </a>
+
+            <br><br>
+
+            <a href="/dashboard">
+                <button style="background:#6c757d;">
+                    ← Back Dashboard
+                </button>
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

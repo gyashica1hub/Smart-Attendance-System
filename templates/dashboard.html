@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="sidebar">
+
+    <h2>Teacher Panel</h2>
+
+    <a href="/dashboard">🏠 Dashboard</a>
+    <a href="/create_class">📚 Create Class</a>
+    <a href="/register_student">👨‍🎓 Register Student</a>
+    <a href="/register_face_page">📸 Register Face</a>
+    <a href="/reports">📊 Reports</a>
+    <a href="/profile">👤 Profile</a>
+    <a href="/logout">🚪 Logout</a>
+
+</div>
+
+
+<div class="main">
+
+    <h1>👋 Welcome, {{ teacher_name }}</h1>
+
+    <h2>Features</h2>
+
+    <div class="cards">
+
+        <a href="/create_class">
+            <div class="card">
+                <h3>Create New Class</h3>
+            </div>
+        </a>
+
+        <a href="/register_student">
+            <div class="card">
+                <h3>Register Students</h3>
+            </div>
+        </a>
+
+        <a href="/register_face_page">
+            <div class="card">
+                <h3>Register Face</h3>
+            </div>
+        </a>
+
+        <a href="/train_model">
+            <div class="card">
+                <h3>Train AI Model</h3>
+            </div>
+        </a>
+
+        <a href="/reports">
+            <div class="card">
+                <h3>Analytics Reports</h3>
+            </div>
+        </a>
+
+    </div>
+
+
+    <h2>Your Classes</h2>
+    <div class="stats-banner">
+
+    <div class="mini-card">
+        <h3>{{ classes|length }}</h3>
+        <p>Total Classes</p>
+    </div>
+
+    <div class="mini-card">
+        <h3>{{ teacher_name }}</h3>
+        <p>Logged In Teacher</p>
+    </div>
+
+</div>
+
+    <div class="cards">
+
+{% for class in classes %}
+
+<div class="card">
+
+    <h3>📚 {{ class[1] }}</h3>
+
+    <p><strong>Subject:</strong> {{ class[2] }}</p>
+
+    <p><strong>Students:</strong> {{ class[3] }}</p>
+
+    <a href="/view_students/{{ class[0] }}">
+    <button>Open Class</button>
+</a>
+
+<a href="/take_attendance/{{ class[0] }}">
+    <button style="background:green;">
+        Take Attendance
+    </button>
+</a>
+
+<a href="/delete_class/{{ class[0] }}">
+    <button style="background:red;">
+        Delete
+    </button>
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+</body>
+</html>

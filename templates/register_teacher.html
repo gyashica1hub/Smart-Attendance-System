@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="login-container">
+
+    <div class="login-card">
+
+        <h2>📝 Teacher Registration</h2>
+
+        <form method="POST">
+
+            <input type="text" 
+                   name="username" 
+                   placeholder="Enter Username" 
+                   required>
+
+            <input type="password" 
+                   name="password" 
+                   placeholder="Enter Password" 
+                   required>
+
+            <button type="submit">
+                Register
+            </button>
+
+        </form>
+
+        <p>Already have an account?</p>
+
+        <a href="/login">
+            <button class="secondary-btn">
+                Back to Login
+            </button>
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>
