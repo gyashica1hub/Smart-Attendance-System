@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Attendance Scanner</title>
+    <style>
+        body{
+            background:#eaf1f8;
+            text-align:center;
+            font-family:Arial;
+        }
+
+        .container{
+            margin-top:40px;
+        }
+
+        video{
+            width:500px;
+            border-radius:20px;
+            border:5px solid #2d4f91;
+        }
+
+        button{
+            padding:15px 30px;
+            background:#2d4f91;
+            color:white;
+            border:none;
+            border-radius:10px;
+            margin-top:20px;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>📸 Live Attendance Scanner</h1>
+
+<video id="video" autoplay></video>
+
+<br>
+
+<button onclick="capture()">Scan Face</button>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+</div>
+
+<script>
+
+navigator.mediaDevices.getUserMedia({video:true})
+.then(stream=>{
+    document.getElementById("video").srcObject=stream;
+});
+
+function capture(){
+
+    let canvas=document.getElementById("canvas");
+    let video=document.getElementById("video");
+
+    canvas.width=video.videoWidth;
+    canvas.height=video.videoHeight;
+
+    let ctx=canvas.getContext("2d");
+
+    ctx.drawImage(video,0,0);
+
+    let image=canvas.toDataURL("image/png");
+
+    fetch("/process_face",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            image:image
+        })
+    })
+    .then(res=>res.text())
+    .then(data=>{
+        alert(data);
+    });
+
+}
+
+</script>
+
+</body>
+</html>

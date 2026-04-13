@@ -149,59 +149,62 @@ def logout():
 
 
 
-@app.route('/register_face_page', methods=['GET','POST'])
-def register_face():
+# @app.route('/register_face_page', methods=['GET','POST'])
+# def register_face():
 
-    if request.method == 'POST':
+#     if request.method == 'POST':
 
-        student_name = request.form['student_name']
+#         student_name = request.form['student_name']
 
-        import cv2, os
+#         import cv2, os
 
-        path = os.path.join("dataset", student_name)
+#         path = os.path.join("dataset", student_name)
 
-        os.makedirs(path, exist_ok=True)
+#         os.makedirs(path, exist_ok=True)
 
-        cam = cv2.VideoCapture(0)
+#         cam = cv2.VideoCapture(0)
 
-        detector = cv2.CascadeClassifier(
-            cv2.data.haarcascades +
-            'haarcascade_frontalface_default.xml'
-        )
+#         detector = cv2.CascadeClassifier(
+#             cv2.data.haarcascades +
+#             'haarcascade_frontalface_default.xml'
+#         )
 
-        count = 0
+#         count = 0
 
-        while True:
+#         while True:
 
-            ret, frame = cam.read()
+#             ret, frame = cam.read()
 
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+#             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-            faces = detector.detectMultiScale(gray,1.3,5)
+#             faces = detector.detectMultiScale(gray,1.3,5)
 
-            for (x,y,w,h) in faces:
+#             for (x,y,w,h) in faces:
 
-                count += 1
+#                 count += 1
 
-                cv2.imwrite(
-                    f"{path}/{count}.jpg",
-                    gray[y:y+h,x:x+w]
-                )
+#                 cv2.imwrite(
+#                     f"{path}/{count}.jpg",
+#                     gray[y:y+h,x:x+w]
+#                 )
 
-                cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
+#                 cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
 
-            cv2.imshow("Register Face",frame)
+#             cv2.imshow("Register Face",frame)
 
-            if cv2.waitKey(1)==13 or count>=20:
-                break
+#             if cv2.waitKey(1)==13 or count>=20:
+#                 break
 
-        cam.release()
-        cv2.destroyAllWindows()
+#         cam.release()
+#         cv2.destroyAllWindows()
 
-        return "Face Registered Successfully"
+#         return "Face Registered Successfully"
 
-    return render_template("register_face.html")
+#     return render_template("register_face.html")
 
+@app.route('/register_face_page')
+def register_face_page():
+    return redirect('/camera')
 
 @app.route('/train_model')
 def train_model():
@@ -550,6 +553,10 @@ def reports():
         "reports.html",
         grouped_data=grouped_data
     )
+
+@app.route('/camera')
+def camera():
+    return render_template("camera.html")
 
 
 
