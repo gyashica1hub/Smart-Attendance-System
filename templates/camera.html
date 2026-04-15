@@ -2,44 +2,106 @@
 <html>
 <head>
     <title>Register Face</title>
+
+    <style>
+        body{
+            margin:0;
+            padding:0;
+            font-family:Arial;
+            background:#dfe6ef;
+        }
+
+        .container{
+            width:500px;
+            margin:40px auto;
+            background:white;
+            padding:30px;
+            border-radius:20px;
+            box-shadow:0 8px 25px rgba(0,0,0,0.15);
+            text-align:center;
+        }
+
+        h1{
+            color:#1e3c72;
+            margin-bottom:25px;
+        }
+
+        input{
+            width:90%;
+            padding:15px;
+            margin-bottom:20px;
+            border:none;
+            border-radius:12px;
+            background:#f1f4f9;
+            font-size:16px;
+        }
+
+        video{
+            width:100%;
+            border-radius:15px;
+            margin-bottom:20px;
+            border:4px solid #1e3c72;
+        }
+
+        button{
+            background:#1e3c72;
+            color:white;
+            border:none;
+            padding:15px 35px;
+            font-size:16px;
+            border-radius:12px;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        button:hover{
+            background:#16325c;
+        }
+
+    </style>
 </head>
 <body>
 
-<h1>Register Face Online</h1>
+<div class="container">
 
-<input type="text" id="student_name" placeholder="Enter Student Name">
+    <h1>📸 Register Face Online</h1>
 
-<br><br>
+    <input type="text"
+           id="student_name"
+           placeholder="Enter Student Name">
 
-<video id="video" width="400" autoplay></video>
+    <video id="video" autoplay></video>
 
-<br><br>
+    <button onclick="captureFace()">
+        Capture Face
+    </button>
 
-<button onclick="captureFace()">Capture Face</button>
+    <canvas id="canvas" style="display:none;"></canvas>
 
-<canvas id="canvas" style="display:none;"></canvas>
+</div>
 
 <script>
 
-navigator.mediaDevices.getUserMedia({ video: true })
-.then(function(stream) {
-    document.getElementById('video').srcObject = stream;
+navigator.mediaDevices.getUserMedia({video:true})
+.then(function(stream){
+    document.getElementById('video').srcObject=stream;
 });
 
 function captureFace(){
 
-    let canvas = document.getElementById('canvas');
-    let video = document.getElementById('video');
+    let canvas=document.getElementById('canvas');
+    let video=document.getElementById('video');
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width=video.videoWidth;
+    canvas.height=video.videoHeight;
 
-    let ctx = canvas.getContext('2d');
+    let ctx=canvas.getContext('2d');
+
     ctx.drawImage(video,0,0);
 
-    let image = canvas.toDataURL('image/jpeg');
+    let image=canvas.toDataURL('image/jpeg');
 
-    let student_name = document.getElementById('student_name').value;
+    let student_name=document.getElementById('student_name').value;
 
     fetch('/save_face',{
 
