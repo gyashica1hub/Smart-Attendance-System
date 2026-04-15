@@ -614,9 +614,52 @@ def delete_student(id):
 
     return redirect('/dashboard')
 
-@app.route('/create_class', methods=['GET'])
-def create_class_page():
-    return render_template("create_class.html")
+
+
+# @app.route('/create_class', methods=['GET'])
+# def create_class_page():
+#     return render_template("create_class.html")
+
+
+# @app.route('/reports')
+# def reports():
+
+#     conn = sqlite3.connect("attendance.db")
+#     cursor = conn.cursor()
+
+#     cursor.execute("""
+#         SELECT attendance.date,
+#                students.student_name,
+#                students.roll_no
+#         FROM attendance
+#         JOIN students
+#         ON attendance.student_name = students.student_name
+#         ORDER BY attendance.date DESC
+#     """)
+
+#     data = cursor.fetchall()
+
+#     conn.close()
+
+#     grouped_data = {}
+
+#     for row in data:
+
+#         date = row[0]
+
+#         if date not in grouped_data:
+#             grouped_data[date] = []
+
+#         grouped_data[date].append({
+#             "name": row[1],
+#             "roll": row[2]
+#         })
+
+#     return render_template(
+#         "reports.html",
+#         grouped_data=grouped_data
+#     )
+
 
 
 @app.route('/reports')
@@ -625,38 +668,36 @@ def reports():
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT attendance.date,
-               students.student_name,
-               students.roll_no
-        FROM attendance
-        JOIN students
-        ON attendance.student_name = students.student_name
-        ORDER BY attendance.date DESC
-    """)
-
-    data = cursor.fetchall()
+    cursor.execute("SELECT * FROM attendance")
+    records = cursor.fetchall()
 
     conn.close()
 
-    grouped_data = {}
+    return render_template(
+        'reports.html',
+        records=records
+    )
 
-    for row in data:
+@app.route('/view_students/<int:class_id>')
+def view_students(class_id):
 
-        date = row[0]
+    conn = sqlite3.connect("attendance.db")
+    cursor = conn.cursor()
 
-        if date not in grouped_data:
-            grouped_data[date] = []
+    cursor.execute("""
+    SELECT * FROM students
+    WHERE class_id=?
+    """,(class_id,))
 
-        grouped_data[date].append({
-            "name": row[1],
-            "roll": row[2]
-        })
+    students = cursor.fetchall()
+
+    conn.close()
 
     return render_template(
-        "reports.html",
-        grouped_data=grouped_data
+        'view_students.html',
+        students=students
     )
+
 
 @app.route('/camera')
 def camera():

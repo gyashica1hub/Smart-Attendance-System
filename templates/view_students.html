@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Class Students</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Segoe UI',sans-serif;
+        }
+
+        body{
+            background:#dfe7f1;
+            padding:40px;
+        }
+
+        .back-btn{
+            display:inline-block;
+            padding:12px 25px;
+            background:#1e3a8a;
+            color:white;
+            text-decoration:none;
+            border-radius:12px;
+            margin-bottom:30px;
+            font-size:18px;
+        }
+
+        .container{
+            max-width:900px;
+            margin:auto;
+        }
+
+        h1{
+            text-align:center;
+            font-size:50px;
+            color:#1e293b;
+            margin-bottom:40px;
+        }
+
+        .student-card{
+            background:white;
+            padding:30px;
+            margin-bottom:25px;
+            border-radius:20px;
+            box-shadow:0 8px 20px rgba(0,0,0,0.08);
+            border-left:8px solid #1e3a8a;
+        }
+
+        .student-name{
+            font-size:30px;
+            color:#1e3a8a;
+            font-weight:bold;
+            margin-bottom:10px;
+        }
+
+        .roll{
+            font-size:20px;
+            color:#555;
+            margin-bottom:20px;
+        }
+
+        .btn-group{
+            display:flex;
+            gap:15px;
+        }
+
+        .delete-btn{
+            background:red;
+            color:white;
+            padding:12px 20px;
+            border:none;
+            border-radius:10px;
+            cursor:pointer;
+            text-decoration:none;
+        }
+
+        .attendance-btn{
+            background:#1e3a8a;
+            color:white;
+            padding:12px 20px;
+            border:none;
+            border-radius:10px;
+            cursor:pointer;
+            text-decoration:none;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <a href="/dashboard" class="back-btn">
+        ← Back Dashboard
+    </a>
+
+    <h1>📚 Class Students</h1>
+
+    {% for student in students %}
+
+    <div class="student-card">
+
+        <div class="student-name">
+            🎓 {{ student[1] }}
+        </div>
+
+        <div class="roll">
+            Roll No: {{ student[2] }}
+        </div>
+
+        <div class="btn-group">
+
+            <a href="/delete_student/{{ student[0] }}"
+               class="delete-btn">
+
+               Delete Student
+            </a>
+
+            <a href="/reports"
+               class="attendance-btn">
+
+               View Attendance
+            </a>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+</body>
+</html>
