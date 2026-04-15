@@ -302,121 +302,154 @@ def train_model():
     return "Model Trained Successfully!"
 
 
+# @app.route('/take_attendance/<int:class_id>')
+# def take_attendance(class_id):
+
+#     recognizer = cv2.face.LBPHFaceRecognizer_create()
+#     recognizer.read("face_model.yml")
+
+#     labels = {}
+
+#     with open("labels.txt","r") as f:
+#         for line in f:
+#             label,name=line.strip().split(",")
+#             labels[int(label)] = name
+
+
+#     conn = sqlite3.connect("attendance.db")
+#     cursor = conn.cursor()
+
+#     cursor.execute(
+#         "SELECT student_name FROM students WHERE class_id=?",
+#         (class_id,)
+#     )
+
+#     class_students = [row[0] for row in cursor.fetchall()]
+
+#     conn.close()
+
+
+#     face_cascade = cv2.CascadeClassifier(
+#         cv2.data.haarcascades+'haarcascade_frontalface_default.xml'
+#     )
+
+#     cap = cv2.VideoCapture(0)
+
+#     marked_students=[]
+
+#     while True:
+
+#         ret, frame = cap.read()
+
+#         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+
+#         faces = face_cascade.detectMultiScale(gray,1.3,5)
+
+#         for (x,y,w,h) in faces:
+
+#             face = gray[y:y+h,x:x+w]
+
+#             face = cv2.resize(face,(200,200))
+
+#             label,confidence = recognizer.predict(face)
+
+#             if confidence < 70:
+
+#                 name = labels[label]
+
+#                 # ONLY CLASS STUDENTS ALLOWED
+#                 if name in class_students:
+
+#                     cv2.putText(
+#                         frame,
+#                         f"{name} Present",
+#                         (x,y-10),
+#                         cv2.FONT_HERSHEY_SIMPLEX,
+#                         0.8,
+#                         (0,255,0),
+#                         2
+#                     )
+
+#                     if name not in marked_students:
+
+#                         now=datetime.now()
+
+#                         date=now.strftime("%Y-%m-%d")
+#                         time=now.strftime("%H:%M:%S")
+
+#                         conn=sqlite3.connect("attendance.db")
+#                         cursor=conn.cursor()
+
+#                         cursor.execute("""
+#                         INSERT INTO attendance(
+#                         student_name,
+#                         date,
+#                         time,
+#                         status
+#                         ) VALUES(?,?,?,?)
+#                         """,(name,date,time,"Present"))
+
+#                         conn.commit()
+#                         conn.close()
+
+#                         marked_students.append(name)
+
+#                 else:
+
+#                     cv2.putText(
+#                         frame,
+#                         "Not In This Class",
+#                         (x,y-10),
+#                         cv2.FONT_HERSHEY_SIMPLEX,
+#                         0.8,
+#                         (0,0,255),
+#                         2
+#                     )
+
+#             cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
+
+#         cv2.imshow("Class Attendance",frame)
+
+#         if cv2.waitKey(1)==ord('q'):
+#             break
+
+#     cap.release()
+#     cv2.destroyAllWindows()
+
+#     return "Attendance Completed!"
+
 @app.route('/take_attendance/<int:class_id>')
 def take_attendance(class_id):
 
-    recognizer = cv2.face.LBPHFaceRecognizer_create()
-    recognizer.read("face_model.yml")
+    return render_template(
+        'attendance_camera.html',
+        class_id=class_id
+    )
 
-    labels = {}
+@app.route('/mark_attendance', methods=['POST'])
+def mark_attendance():
 
-    with open("labels.txt","r") as f:
-        for line in f:
-            label,name=line.strip().split(",")
-            labels[int(label)] = name
+    student_name = request.form['student_name']
 
+    now = datetime.now()
+
+    date = now.strftime("%Y-%m-%d")
+    time = now.strftime("%H:%M:%S")
 
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT student_name FROM students WHERE class_id=?",
-        (class_id,)
+    cursor.execute("""
+    INSERT INTO attendance(
+    student_name,date,time,status
     )
+    VALUES(?,?,?,?)
+    """,(student_name,date,time,"Present"))
 
-    class_students = [row[0] for row in cursor.fetchall()]
-
+    conn.commit()
     conn.close()
 
-
-    face_cascade = cv2.CascadeClassifier(
-        cv2.data.haarcascades+'haarcascade_frontalface_default.xml'
-    )
-
-    cap = cv2.VideoCapture(0)
-
-    marked_students=[]
-
-    while True:
-
-        ret, frame = cap.read()
-
-        gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-
-        faces = face_cascade.detectMultiScale(gray,1.3,5)
-
-        for (x,y,w,h) in faces:
-
-            face = gray[y:y+h,x:x+w]
-
-            face = cv2.resize(face,(200,200))
-
-            label,confidence = recognizer.predict(face)
-
-            if confidence < 70:
-
-                name = labels[label]
-
-                # ONLY CLASS STUDENTS ALLOWED
-                if name in class_students:
-
-                    cv2.putText(
-                        frame,
-                        f"{name} Present",
-                        (x,y-10),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.8,
-                        (0,255,0),
-                        2
-                    )
-
-                    if name not in marked_students:
-
-                        now=datetime.now()
-
-                        date=now.strftime("%Y-%m-%d")
-                        time=now.strftime("%H:%M:%S")
-
-                        conn=sqlite3.connect("attendance.db")
-                        cursor=conn.cursor()
-
-                        cursor.execute("""
-                        INSERT INTO attendance(
-                        student_name,
-                        date,
-                        time,
-                        status
-                        ) VALUES(?,?,?,?)
-                        """,(name,date,time,"Present"))
-
-                        conn.commit()
-                        conn.close()
-
-                        marked_students.append(name)
-
-                else:
-
-                    cv2.putText(
-                        frame,
-                        "Not In This Class",
-                        (x,y-10),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.8,
-                        (0,0,255),
-                        2
-                    )
-
-            cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
-
-        cv2.imshow("Class Attendance",frame)
-
-        if cv2.waitKey(1)==ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-    return "Attendance Completed!"
+    return "Attendance Marked Successfully"
 
 
 

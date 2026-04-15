@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Take Attendance</title>
+</head>
+<body>
+
+<h1>Take Attendance</h1>
+
+<input type="text"
+       id="student_name"
+       placeholder="Enter Student Name">
+
+<br><br>
+
+<video id="video" width="400" autoplay></video>
+
+<br><br>
+
+<button onclick="markAttendance()">
+Mark Attendance
+</button>
+
+<script>
+
+navigator.mediaDevices.getUserMedia({video:true})
+.then(function(stream){
+document.getElementById('video').srcObject=stream;
+});
+
+function markAttendance(){
+
+let student_name=
+document.getElementById('student_name').value;
+
+fetch('/mark_attendance',{
+
+method:'POST',
+
+headers:{
+'Content-Type':'application/x-www-form-urlencoded'
+},
+
+body:'student_name='+student_name
+
+})
+
+.then(res=>res.text())
+.then(data=>alert(data));
+
+}
+
+</script>
+
+</body>
+</html>
