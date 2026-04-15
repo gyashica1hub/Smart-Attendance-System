@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Attendance</title>
+
+    <style>
+
+        body{
+            background:#dfe7f1;
+            font-family:Segoe UI;
+            padding:40px;
+        }
+
+        .card{
+            max-width:700px;
+            margin:auto;
+            background:white;
+            padding:40px;
+            border-radius:20px;
+            box-shadow:0 10px 20px rgba(0,0,0,0.1);
+            text-align:center;
+        }
+
+        h1{
+            color:#1e3a8a;
+            margin-bottom:30px;
+        }
+
+        .stat{
+            font-size:24px;
+            margin:20px 0;
+            font-weight:bold;
+        }
+
+        .percent{
+            color:green;
+            font-size:40px;
+        }
+
+        .back{
+            display:inline-block;
+            margin-top:30px;
+            padding:12px 25px;
+            background:#1e3a8a;
+            color:white;
+            text-decoration:none;
+            border-radius:10px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="card">
+
+    <h1>📊 Student Attendance Report</h1>
+
+    <div class="stat">
+        Name: {{ student[0] }}
+    </div>
+
+    <div class="stat">
+        Roll No: {{ student[1] }}
+    </div>
+
+    <div class="stat">
+        Present Days: {{ present_days }}
+    </div>
+
+    <div class="stat">
+        Total Working Days: {{ total_days }}
+    </div>
+
+    <div class="percent">
+        {{ percentage }}%
+    </div>
+
+    <a href="/dashboard" class="back">
+        Back Dashboard
+    </a>
+
+</div>
+
+</body>
+</html>
