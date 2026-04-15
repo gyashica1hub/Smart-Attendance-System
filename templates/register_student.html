@@ -4,48 +4,40 @@
     <title>Register Student</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="dashboard-body">
 
 <div class="form-container">
 
-<div class="form-card">
+    <h1>🎓 Register Student</h1>
 
-<h1>👨‍🎓 Register Student</h1>
+    <form method="POST" action="/register_student">
 
-<form method="POST">
+        <input type="text"
+               name="student_name"
+               placeholder="Student Name"
+               required>
 
-<input type="text"
-name="student_name"
-placeholder="Student Name"
-required>
+        <input type="text"
+               name="roll_no"
+               placeholder="Roll Number"
+               required>
 
-<input type="text"
-name="roll_no"
-placeholder="Roll Number"
-required>
+        <select name="class_id" required>
+            <option value="">Select Class</option>
 
-<select name="class_id" required>
+            {% for class in classes %}
+            <option value="{{ class[0] }}">
+                {{ class[1] }}
+            </option>
+            {% endfor %}
 
-<option value="">Select Class</option>
+        </select>
 
-{% for class in classes %}
+        <button type="submit">
+            Register Student
+        </button>
 
-<option value="{{ class[0] }}">
-    {{ class[1] }}
-</option>
-
-{% endfor %}
-
-</select>
-
-
-<button type="submit">
-Register Student
-</button>
-
-</form>
-
-</div>
+    </form>
 
 </div>
 

@@ -108,7 +108,7 @@ def create_class():
 
 
 # REGISTER STUDENT PAGE
-@app.route('/register_student', methods=['GET','POST'])
+@app.route('/register_student', methods=['GET', 'POST'])
 def register_student():
 
     conn = sqlite3.connect("attendance.db")
@@ -116,30 +116,31 @@ def register_student():
 
     if request.method == 'POST':
 
-        name = request.form['student_name']
-        roll = request.form['roll_no']
+        student_name = request.form['student_name']
+        roll_no = request.form['roll_no']
         class_id = request.form['class_id']
 
         cursor.execute("""
-        INSERT INTO students(
-        student_name,
-        roll_no,
-        class_id
-        ) VALUES(?,?,?)
-        """,(name,roll,class_id))
+        INSERT INTO students(student_name, roll_no, class_id)
+        VALUES(?,?,?)
+        """, (student_name, roll_no, class_id))
 
         conn.commit()
 
-    # FETCH CLASSES FOR DROPDOWN
-    cursor.execute("SELECT id, class_name FROM classes")
+        return redirect('/dashboard')
+
+    cursor.execute("SELECT * FROM classes")
     classes = cursor.fetchall()
 
     conn.close()
 
     return render_template(
-        "register_student.html",
+        'register_student.html',
         classes=classes
     )
+
+
+
 
 
 @app.route('/logout')
