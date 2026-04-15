@@ -4,6 +4,10 @@ import cv2
 import os
 import numpy as np
 from datetime import datetime
+import base64
+
+
+
 
 app = Flask(__name__)
 app.secret_key="attendance"
@@ -213,6 +217,29 @@ def register_face():
     name = request.form['student_name']
 
     return f"{name} Face Registration Started"
+
+
+
+@app.route('/save_face', methods=['POST'])
+def save_face():
+
+    student_name = request.form['student_name']
+    image_data = request.form['image']
+
+    image_data = image_data.split(",")[1]
+
+    image_bytes = base64.b64decode(image_data)
+
+    folder_path = f"dataset/{student_name}"
+
+    os.makedirs(folder_path, exist_ok=True)
+
+    image_number = len(os.listdir(folder_path)) + 1
+
+    with open(f"{folder_path}/{image_number}.jpg", "wb") as f:
+        f.write(image_bytes)
+
+    return "Face Saved Successfully!"
 
 
 

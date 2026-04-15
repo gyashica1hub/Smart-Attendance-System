@@ -1,86 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Live Attendance Scanner</title>
-    <style>
-        body{
-            background:#eaf1f8;
-            text-align:center;
-            font-family:Arial;
-        }
-
-        .container{
-            margin-top:40px;
-        }
-
-        video{
-            width:500px;
-            border-radius:20px;
-            border:5px solid #2d4f91;
-        }
-
-        button{
-            padding:15px 30px;
-            background:#2d4f91;
-            color:white;
-            border:none;
-            border-radius:10px;
-            margin-top:20px;
-            cursor:pointer;
-        }
-    </style>
+    <title>Register Face</title>
 </head>
 <body>
 
-<div class="container">
+<h1>Register Face Online</h1>
 
-<h1>📸 Live Attendance Scanner</h1>
+<input type="text" id="student_name" placeholder="Enter Student Name">
 
-<video id="video" autoplay></video>
+<br><br>
 
-<br>
+<video id="video" width="400" autoplay></video>
 
-<button onclick="capture()">Scan Face</button>
+<br><br>
+
+<button onclick="captureFace()">Capture Face</button>
 
 <canvas id="canvas" style="display:none;"></canvas>
 
-</div>
-
 <script>
 
-navigator.mediaDevices.getUserMedia({video:true})
-.then(stream=>{
-    document.getElementById("video").srcObject=stream;
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(function(stream) {
+    document.getElementById('video').srcObject = stream;
 });
 
-function capture(){
+function captureFace(){
 
-    let canvas=document.getElementById("canvas");
-    let video=document.getElementById("video");
+    let canvas = document.getElementById('canvas');
+    let video = document.getElementById('video');
 
-    canvas.width=video.videoWidth;
-    canvas.height=video.videoHeight;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-    let ctx=canvas.getContext("2d");
-
+    let ctx = canvas.getContext('2d');
     ctx.drawImage(video,0,0);
 
-    let image=canvas.toDataURL("image/png");
+    let image = canvas.toDataURL('image/jpeg');
 
-    fetch("/process_face",{
-        method:"POST",
+    let student_name = document.getElementById('student_name').value;
+
+    fetch('/save_face',{
+
+        method:'POST',
+
         headers:{
-            "Content-Type":"application/json"
+            'Content-Type':'application/x-www-form-urlencoded'
         },
-        body:JSON.stringify({
-            image:image
-        })
-    })
-    .then(res=>res.text())
-    .then(data=>{
-        alert(data);
-    });
 
+        body:
+        'student_name='+student_name+
+        '&image='+encodeURIComponent(image)
+
+    })
+
+    .then(res=>res.text())
+    .then(data=>alert(data));
 }
 
 </script>
