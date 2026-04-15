@@ -6,19 +6,18 @@ import numpy as np
 from datetime import datetime
 import base64
 
-
-
-
 app = Flask(__name__)
-app.secret_key="attendance"
+app.secret_key = "attendance"
 
 
+# ================= HOME =================
 @app.route('/')
 def home():
     return render_template("home.html")
 
 
-@app.route('/login', methods=['GET','POST'])
+# ================= LOGIN =================
+@app.route('/login', methods=['GET', 'POST'])
 def login():
 
     if request.method == 'POST':
@@ -32,17 +31,14 @@ def login():
         cursor.execute("""
         SELECT * FROM teachers
         WHERE username=? AND password=?
-        """,(username,password))
+        """, (username, password))
 
         teacher = cursor.fetchone()
-
         conn.close()
 
         if teacher:
-
             session['teacher_id'] = teacher[0]
             session['teacher_name'] = teacher[1]
-
             return redirect('/dashboard')
 
         return "Invalid Login"
@@ -50,8 +46,12 @@ def login():
     return render_template("login.html")
 
 
+# ================= DASHBOARD =================
 @app.route('/dashboard')
 def dashboard():
+
+    if 'teacher_id' not in session:
+        return redirect('/login')
 
     teacher_id = session['teacher_id']
     teacher_name = session['teacher_name']
@@ -69,7 +69,7 @@ def dashboard():
     ON classes.id = students.class_id
     WHERE classes.teacher_id=?
     GROUP BY classes.id
-    """,(teacher_id,))
+    """, (teacher_id,))
 
     classes = cursor.fetchall()
 
@@ -82,38 +82,41 @@ def dashboard():
     )
 
 
-
-# CREATE CLASS PAGE
-@app.route('/create_class', methods=['POST'])
+# ================= CREATE CLASS =================
+@app.route('/create_class', methods=['GET', 'POST'])
 def create_class():
 
-    class_name = request.form['class_name']
-    subject = request.form['subject']
+    if 'teacher_id' not in session:
+        return redirect('/login')
 
-    teacher_id = session['teacher_id']
+    if request.method == 'POST':
 
-    conn = sqlite3.connect("attendance.db")
-    cursor = conn.cursor()
+        class_name = request.form['class_name']
+        subject = request.form['subject']
+        teacher_id = session['teacher_id']
 
-    cursor.execute("""
-    INSERT INTO classes(
-        class_name,
-        subject,
-        teacher_id
-    )
-    VALUES(?,?,?)
-    """,(class_name,subject,teacher_id))
+        conn = sqlite3.connect("attendance.db")
+        cursor = conn.cursor()
 
-    conn.commit()
-    conn.close()
+        cursor.execute("""
+        INSERT INTO classes(class_name, subject, teacher_id)
+        VALUES(?,?,?)
+        """, (class_name, subject, teacher_id))
 
-    return redirect('/dashboard')
+        conn.commit()
+        conn.close()
+
+        return redirect('/dashboard')
+
+    return render_template("create_class.html")
 
 
-
-# REGISTER STUDENT PAGE
+# ================= REGISTER STUDENT =================
 @app.route('/register_student', methods=['GET', 'POST'])
 def register_student():
+
+    if 'teacher_id' not in session:
+        return redirect('/login')
 
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
@@ -130,94 +133,58 @@ def register_student():
         """, (student_name, roll_no, class_id))
 
         conn.commit()
+        conn.close()
 
         return redirect('/dashboard')
 
-    cursor.execute("SELECT * FROM classes")
+    cursor.execute("""
+    SELECT * FROM classes
+    WHERE teacher_id=?
+    """, (session['teacher_id'],))
+
     classes = cursor.fetchall()
 
     conn.close()
 
-    return render_template(
-        'register_student.html',
-        classes=classes
-    )
+    return render_template("register_student.html", classes=classes)
 
 
+# ================= REGISTER TEACHER =================
+@app.route('/register_teacher', methods=['GET', 'POST'])
+def register_teacher():
+
+    if request.method == 'POST':
+
+        username = request.form['username']
+        password = request.form['password']
+
+        conn = sqlite3.connect("attendance.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        INSERT INTO teachers(username,password)
+        VALUES(?,?)
+        """, (username, password))
+
+        conn.commit()
+        conn.close()
+
+        return redirect('/login')
+
+    return render_template("register_teacher.html")
 
 
-
+# ================= LOGOUT =================
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/login')
 
 
-
-# @app.route('/register_face_page', methods=['GET','POST'])
-# def register_face():
-
-#     if request.method == 'POST':
-
-#         student_name = request.form['student_name']
-
-#         import cv2, os
-
-#         path = os.path.join("dataset", student_name)
-
-#         os.makedirs(path, exist_ok=True)
-
-#         cam = cv2.VideoCapture(0)
-
-#         detector = cv2.CascadeClassifier(
-#             cv2.data.haarcascades +
-#             'haarcascade_frontalface_default.xml'
-#         )
-
-#         count = 0
-
-#         while True:
-
-#             ret, frame = cam.read()
-
-#             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-#             faces = detector.detectMultiScale(gray,1.3,5)
-
-#             for (x,y,w,h) in faces:
-
-#                 count += 1
-
-#                 cv2.imwrite(
-#                     f"{path}/{count}.jpg",
-#                     gray[y:y+h,x:x+w]
-#                 )
-
-#                 cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
-
-#             cv2.imshow("Register Face",frame)
-
-#             if cv2.waitKey(1)==13 or count>=20:
-#                 break
-
-#         cam.release()
-#         cv2.destroyAllWindows()
-
-#         return "Face Registered Successfully"
-
-#     return render_template("register_face.html")
-
+# ================= FACE REGISTRATION =================
 @app.route('/register_face_page')
 def register_face_page():
-    return redirect('/camera')
-
-@app.route('/register_face', methods=['POST'])
-def register_face():
-
-    name = request.form['student_name']
-
-    return f"{name} Face Registration Started"
-
+    return render_template("camera.html")
 
 
 @app.route('/save_face', methods=['POST'])
@@ -227,11 +194,9 @@ def save_face():
     image_data = request.form['image']
 
     image_data = image_data.split(",")[1]
-
     image_bytes = base64.b64decode(image_data)
 
     folder_path = f"dataset/{student_name}"
-
     os.makedirs(folder_path, exist_ok=True)
 
     image_number = len(os.listdir(folder_path)) + 1
@@ -242,8 +207,7 @@ def save_face():
     return "Face Saved Successfully!"
 
 
-
-
+# ================= TRAIN MODEL =================
 @app.route('/train_model')
 def train_model():
 
@@ -253,9 +217,7 @@ def train_model():
     dataset_path = "dataset"
 
     if not os.path.exists(dataset_path):
-        os.makedirs(dataset_path)
-        return "Dataset folder created. Add faces first."
-
+        return "Dataset Folder Missing"
 
     label_map = {}
     current_label = 0
@@ -278,147 +240,29 @@ def train_model():
             if img is None:
                 continue
 
-            img = cv2.resize(img, (200,200))
+            img = cv2.resize(img, (200, 200))
 
             faces.append(img)
             labels.append(current_label)
 
         current_label += 1
 
+    if len(faces) == 0:
+        return "No Face Images Found"
 
     recognizer = cv2.face.LBPHFaceRecognizer_create()
 
     recognizer.train(faces, np.array(labels))
-
     recognizer.save("face_model.yml")
 
-
-    with open("labels.txt","w") as f:
-
-        for label,name in label_map.items():
+    with open("labels.txt", "w") as f:
+        for label, name in label_map.items():
             f.write(f"{label},{name}\n")
 
-
-    return "Model Trained Successfully!"
-
-
-# @app.route('/take_attendance/<int:class_id>')
-# def take_attendance(class_id):
-
-#     recognizer = cv2.face.LBPHFaceRecognizer_create()
-#     recognizer.read("face_model.yml")
-
-#     labels = {}
-
-#     with open("labels.txt","r") as f:
-#         for line in f:
-#             label,name=line.strip().split(",")
-#             labels[int(label)] = name
+    return "Model Trained Successfully"
 
 
-#     conn = sqlite3.connect("attendance.db")
-#     cursor = conn.cursor()
-
-#     cursor.execute(
-#         "SELECT student_name FROM students WHERE class_id=?",
-#         (class_id,)
-#     )
-
-#     class_students = [row[0] for row in cursor.fetchall()]
-
-#     conn.close()
-
-
-#     face_cascade = cv2.CascadeClassifier(
-#         cv2.data.haarcascades+'haarcascade_frontalface_default.xml'
-#     )
-
-#     cap = cv2.VideoCapture(0)
-
-#     marked_students=[]
-
-#     while True:
-
-#         ret, frame = cap.read()
-
-#         gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-
-#         faces = face_cascade.detectMultiScale(gray,1.3,5)
-
-#         for (x,y,w,h) in faces:
-
-#             face = gray[y:y+h,x:x+w]
-
-#             face = cv2.resize(face,(200,200))
-
-#             label,confidence = recognizer.predict(face)
-
-#             if confidence < 70:
-
-#                 name = labels[label]
-
-#                 # ONLY CLASS STUDENTS ALLOWED
-#                 if name in class_students:
-
-#                     cv2.putText(
-#                         frame,
-#                         f"{name} Present",
-#                         (x,y-10),
-#                         cv2.FONT_HERSHEY_SIMPLEX,
-#                         0.8,
-#                         (0,255,0),
-#                         2
-#                     )
-
-#                     if name not in marked_students:
-
-#                         now=datetime.now()
-
-#                         date=now.strftime("%Y-%m-%d")
-#                         time=now.strftime("%H:%M:%S")
-
-#                         conn=sqlite3.connect("attendance.db")
-#                         cursor=conn.cursor()
-
-#                         cursor.execute("""
-#                         INSERT INTO attendance(
-#                         student_name,
-#                         date,
-#                         time,
-#                         status
-#                         ) VALUES(?,?,?,?)
-#                         """,(name,date,time,"Present"))
-
-#                         conn.commit()
-#                         conn.close()
-
-#                         marked_students.append(name)
-
-#                 else:
-
-#                     cv2.putText(
-#                         frame,
-#                         "Not In This Class",
-#                         (x,y-10),
-#                         cv2.FONT_HERSHEY_SIMPLEX,
-#                         0.8,
-#                         (0,0,255),
-#                         2
-#                     )
-
-#             cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
-
-#         cv2.imshow("Class Attendance",frame)
-
-#         if cv2.waitKey(1)==ord('q'):
-#             break
-
-#     cap.release()
-#     cv2.destroyAllWindows()
-
-#     return "Attendance Completed!"
-
-
+# ================= TAKE ATTENDANCE =================
 @app.route('/take_attendance/<int:class_id>')
 def take_attendance(class_id):
 
@@ -442,21 +286,19 @@ def take_attendance(class_id):
     )
 
 
+# ================= MARK ATTENDANCE =================
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
 
     student_name = request.form['student_name']
-    class_id = request.form['class_id']
 
     now = datetime.now()
-
     date = now.strftime("%Y-%m-%d")
     time = now.strftime("%H:%M:%S")
 
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
-    # duplicate check
     cursor.execute("""
     SELECT * FROM attendance
     WHERE student_name=? AND date=?
@@ -466,15 +308,10 @@ def mark_attendance():
 
     if existing:
         conn.close()
-        return "Attendance Already Marked Today"
+        return "Attendance Already Marked"
 
     cursor.execute("""
-    INSERT INTO attendance(
-        student_name,
-        date,
-        time,
-        status
-    )
+    INSERT INTO attendance(student_name,date,time,status)
     VALUES(?,?,?,?)
     """, (student_name, date, time, "Present"))
 
@@ -484,60 +321,98 @@ def mark_attendance():
     return "Attendance Marked Successfully"
 
 
+# ================= REPORTS =================
+@app.route('/reports')
+def reports():
+
+    conn = sqlite3.connect("attendance.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT student_name,date,time,status
+    FROM attendance
+    ORDER BY date DESC,time DESC
+    """)
+
+    records = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("reports.html", records=records)
 
 
+# ================= VIEW STUDENTS =================
+@app.route('/view_students/<int:class_id>')
+def view_students(class_id):
 
-# @app.route('/view_students/<int:class_id>')
-# def view_students(class_id):
+    conn = sqlite3.connect("attendance.db")
+    cursor = conn.cursor()
 
-#     conn = sqlite3.connect("attendance.db")
-#     cursor = conn.cursor()
+    cursor.execute("""
+    SELECT * FROM students
+    WHERE class_id=?
+    """, (class_id,))
 
-#     cursor.execute("""
-#         SELECT * FROM students
-#         WHERE class_id=?
-#     """,(class_id,))
+    students = cursor.fetchall()
 
-#     students = cursor.fetchall()
+    conn.close()
 
-#     conn.close()
-
-#     return render_template(
-#         "class_students.html",
-#         students=students
-#     )
+    return render_template("view_students.html", students=students)
 
 
-@app.route('/register_teacher', methods=['GET','POST'])
-def register_teacher():
+# ================= STUDENT ATTENDANCE =================
+@app.route('/student_attendance/<int:student_id>')
+def student_attendance(student_id):
 
-    if request.method == 'POST':
+    conn = sqlite3.connect("attendance.db")
+    cursor = conn.cursor()
 
-        username = request.form['username']
-        password = request.form['password']
+    cursor.execute("""
+    SELECT student_name, roll_no
+    FROM students
+    WHERE id=?
+    """, (student_id,))
 
-        conn = sqlite3.connect("attendance.db")
-        cursor = conn.cursor()
+    student = cursor.fetchone()
 
-        cursor.execute("""
-        INSERT INTO teachers(username,password)
-        VALUES(?,?)
-        """,(username,password))
+    if not student:
+        return "Student Not Found"
 
-        conn.commit()
-        conn.close()
+    student_name = student[0]
+    roll_no = student[1]
 
-        return redirect('/login')
+    cursor.execute("""
+    SELECT COUNT(*)
+    FROM attendance
+    WHERE student_name=?
+    """, (student_name,))
 
-    return render_template("register_teacher.html")
+    present_days = cursor.fetchone()[0]
+
+    cursor.execute("""
+    SELECT COUNT(DISTINCT date)
+    FROM attendance
+    """)
+
+    total_days = cursor.fetchone()[0]
+
+    percentage = 0 if total_days == 0 else round((present_days / total_days) * 100, 2)
+
+    conn.close()
+
+    return render_template(
+        "student_attendance.html",
+        student_name=student_name,
+        roll_no=roll_no,
+        present_days=present_days,
+        total_days=total_days,
+        percentage=percentage
+    )
 
 
-
+# ================= PROFILE =================
 @app.route('/profile')
 def profile():
-
-    if 'teacher_id' not in session:
-        return redirect('/login')
 
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
@@ -545,18 +420,17 @@ def profile():
     cursor.execute("""
     SELECT username FROM teachers
     WHERE id=?
-    """,(session['teacher_id'],))
+    """, (session['teacher_id'],))
 
     teacher = cursor.fetchone()
 
     conn.close()
 
-    return render_template(
-        "profile.html",
-        teacher=teacher
-    )
+    return render_template("profile.html", teacher=teacher)
 
-@app.route('/change_password', methods=['GET','POST'])
+
+# ================= CHANGE PASSWORD =================
+@app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
 
     if request.method == 'POST':
@@ -570,7 +444,7 @@ def change_password():
         UPDATE teachers
         SET password=?
         WHERE id=?
-        """,(new_password,session['teacher_id']))
+        """, (new_password, session['teacher_id']))
 
         conn.commit()
         conn.close()
@@ -579,16 +453,16 @@ def change_password():
 
     return render_template("change_password.html")
 
+
+# ================= DELETE CLASS =================
 @app.route('/delete_class/<int:id>')
 def delete_class(id):
 
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
-    cursor.execute(
-        "DELETE FROM classes WHERE id=?",
-        (id,)
-    )
+    cursor.execute("DELETE FROM students WHERE class_id=?", (id,))
+    cursor.execute("DELETE FROM classes WHERE id=?", (id,))
 
     conn.commit()
     conn.close()
@@ -596,18 +470,14 @@ def delete_class(id):
     return redirect('/dashboard')
 
 
-
-
+# ================= DELETE STUDENT =================
 @app.route('/delete_student/<int:id>')
 def delete_student(id):
 
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
-    cursor.execute(
-        "DELETE FROM students WHERE id=?",
-        (id,)
-    )
+    cursor.execute("DELETE FROM students WHERE id=?", (id,))
 
     conn.commit()
     conn.close()
@@ -615,204 +485,7 @@ def delete_student(id):
     return redirect('/dashboard')
 
 
-
-# @app.route('/create_class', methods=['GET'])
-# def create_class_page():
-#     return render_template("create_class.html")
-
-
-# @app.route('/reports')
-# def reports():
-
-#     conn = sqlite3.connect("attendance.db")
-#     cursor = conn.cursor()
-
-#     cursor.execute("""
-#         SELECT attendance.date,
-#                students.student_name,
-#                students.roll_no
-#         FROM attendance
-#         JOIN students
-#         ON attendance.student_name = students.student_name
-#         ORDER BY attendance.date DESC
-#     """)
-
-#     data = cursor.fetchall()
-
-#     conn.close()
-
-#     grouped_data = {}
-
-#     for row in data:
-
-#         date = row[0]
-
-#         if date not in grouped_data:
-#             grouped_data[date] = []
-
-#         grouped_data[date].append({
-#             "name": row[1],
-#             "roll": row[2]
-#         })
-
-#     return render_template(
-#         "reports.html",
-#         grouped_data=grouped_data
-#     )
-
-
-
-@app.route('/reports')
-def reports():
-
-    conn = sqlite3.connect("attendance.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    SELECT student_name, date, time, status
-    FROM attendance
-    ORDER BY date DESC, time DESC
-    """)
-
-    records = cursor.fetchall()
-
-    conn.close()
-
-    return render_template(
-        'reports.html',
-        records=records
-    )
-
-
-
-@app.route('/view_students/<int:class_id>')
-def view_students(class_id):
-
-    conn = sqlite3.connect("attendance.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    SELECT * FROM students
-    WHERE class_id=?
-    """,(class_id,))
-
-    students = cursor.fetchall()
-
-    conn.close()
-
-    return render_template(
-        'view_students.html',
-        students=students
-    )
-
-
-# @app.route('/student_attendance/<int:student_id>')
-# def student_attendance(student_id):
-
-#     conn = sqlite3.connect("attendance.db")
-#     cursor = conn.cursor()
-
-#     # Get Student Info
-#     cursor.execute("""
-#     SELECT student_name, roll_no
-#     FROM students
-#     WHERE id=?
-#     """,(student_id,))
-
-#     student = cursor.fetchone()
-
-#     # Total Present Days
-#     cursor.execute("""
-#     SELECT COUNT(*)
-#     FROM attendance
-#     WHERE student_name=?
-#     """,(student[0],))
-
-#     present_days = cursor.fetchone()[0]
-
-#     # Total Working Days
-#     cursor.execute("""
-#     SELECT COUNT(DISTINCT date)
-#     FROM attendance
-#     """)
-
-#     total_days = cursor.fetchone()[0]
-
-#     if total_days == 0:
-#         percentage = 0
-#     else:
-#         percentage = round((present_days/total_days)*100,2)
-
-#     conn.close()
-
-#     return render_template(
-#         'student_attendance.html',
-#         student=student,
-#         present_days=present_days,
-#         total_days=total_days,
-#         percentage=percentage
-#     )
-
-@app.route('/student_attendance/<int:student_id>')
-def student_attendance(student_id):
-
-    conn = sqlite3.connect("attendance.db")
-    cursor = conn.cursor()
-
-    # Get Student Details
-    cursor.execute("""
-    SELECT student_name, roll_no
-    FROM students
-    WHERE id=?
-    """, (student_id,))
-
-    student = cursor.fetchone()
-
-    # If student not found
-    if not student:
-        conn.close()
-        return "Student Not Found"
-
-    student_name = student[0]
-    roll_no = student[1]
-
-    # Count Present Days
-    cursor.execute("""
-    SELECT COUNT(*)
-    FROM attendance
-    WHERE student_name=?
-    """, (student_name,))
-
-    present_days = cursor.fetchone()[0]
-
-    # Count Total Working Days
-    cursor.execute("""
-    SELECT COUNT(DISTINCT date)
-    FROM attendance
-    """)
-
-    total_days = cursor.fetchone()[0]
-
-    # Avoid divide by zero
-    if total_days == 0:
-        percentage = 0
-    else:
-        percentage = round((present_days / total_days) * 100, 2)
-
-    conn.close()
-
-    return render_template(
-        'student_attendance.html',
-        student_name=student_name,
-        roll_no=roll_no,
-        present_days=present_days,
-        total_days=total_days,
-        percentage=percentage
-    )
-
-
-
-
+# ================= CAMERA =================
 @app.route('/camera')
 def camera():
     return render_template("camera.html")
