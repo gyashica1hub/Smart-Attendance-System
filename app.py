@@ -668,7 +668,12 @@ def reports():
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM attendance")
+    cursor.execute("""
+    SELECT student_name, date, time, status
+    FROM attendance
+    ORDER BY date DESC, time DESC
+    """)
+
     records = cursor.fetchall()
 
     conn.close()
@@ -677,6 +682,8 @@ def reports():
         'reports.html',
         records=records
     )
+
+
 
 @app.route('/view_students/<int:class_id>')
 def view_students(class_id):
