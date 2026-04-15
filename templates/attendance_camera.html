@@ -4,132 +4,104 @@
     <title>Take Attendance</title>
 
     <style>
-
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:'Segoe UI',sans-serif;
-        }
-
         body{
             background:#dfe7f1;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            min-height:100vh;
-        }
-
-        .attendance-box{
-            background:white;
-            padding:40px;
-            width:500px;
-            border-radius:25px;
-            box-shadow:0 10px 30px rgba(0,0,0,0.15);
+            font-family:Segoe UI;
             text-align:center;
+            padding:40px;
         }
 
-        h1{
-            color:#1e3a8a;
-            margin-bottom:30px;
-            font-size:38px;
+        .card{
+            background:white;
+            padding:30px;
+            border-radius:20px;
+            max-width:700px;
+            margin:auto;
+            box-shadow:0 10px 20px rgba(0,0,0,0.1);
         }
 
-        select{
+        video{
             width:100%;
-            padding:16px;
-            border:none;
-            border-radius:12px;
-            background:#f3f4f6;
-            font-size:18px;
-            margin-bottom:25px;
-            outline:none;
+            border-radius:15px;
+            margin-top:20px;
         }
 
         button{
-            width:100%;
-            padding:16px;
-            border:none;
-            border-radius:12px;
             background:#1e3a8a;
             color:white;
-            font-size:20px;
+            border:none;
+            padding:15px 30px;
+            border-radius:10px;
+            margin-top:20px;
             cursor:pointer;
-            transition:0.3s;
+            font-size:18px;
         }
 
-        button:hover{
-            background:#142b63;
-        }
-
-        .icon{
-            font-size:40px;
-            margin-bottom:10px;
+        #result{
+            margin-top:20px;
+            font-size:22px;
+            font-weight:bold;
+            color:green;
         }
 
     </style>
 </head>
 <body>
 
-<div class="attendance-box">
+<div class="card">
 
-    <div class="icon">📸</div>
+    <h1>📷 Face Attendance</h1>
 
-    <h1>Take Attendance</h1>
+    <video id="video" autoplay></video>
 
-    <input type="hidden" id="class_id" value="{{ class_id }}">
+    <br>
 
-    <select id="student_name">
-
-        <option value="">Select Student</option>
-
-        {% for student in students %}
-        <option value="{{ student[0] }}">
-            {{ student[0] }} (Roll: {{ student[1] }})
-        </option>
-        {% endfor %}
-
-    </select>
-
-    <button onclick="markAttendance()">
-        Mark Attendance
+    <button onclick="captureAttendance()">
+        Scan Face
     </button>
+
+    <div id="result"></div>
 
 </div>
 
 <script>
 
-function markAttendance(){
+const video = document.getElementById('video');
 
-    let student_name =
-        document.getElementById("student_name").value;
+navigator.mediaDevices.getUserMedia({video:true})
+.then(stream=>{
+    video.srcObject = stream;
+});
 
-    let class_id =
-        document.getElementById("class_id").value;
 
-    if(student_name==""){
-        alert("Please Select Student");
-        return;
-    }
+function captureAttendance(){
 
-    fetch('/mark_attendance',{
+    let canvas = document.createElement("canvas");
 
-        method:'POST',
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
+    let ctx = canvas.getContext("2d");
+
+    ctx.drawImage(video,0,0);
+
+    let image = canvas.toDataURL("image/jpeg");
+
+    fetch("/scan_attendance",{
+        method:"POST",
         headers:{
-            'Content-Type':'application/x-www-form-urlencoded'
+            "Content-Type":"application/json"
         },
-
-        body:
-        'student_name='+student_name+
-        '&class_id='+class_id
+        body:JSON.stringify({
+            image:image,
+            class_id:"{{ class_id }}"
+        })
     })
 
     .then(res=>res.text())
+
     .then(data=>{
-
-        alert(data);
-
+        document.getElementById("result").innerHTML=data;
     });
 
 }

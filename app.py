@@ -263,26 +263,138 @@ def train_model():
 
 
 # ================= TAKE ATTENDANCE =================
+# @app.route('/take_attendance/<int:class_id>')
+# def take_attendance(class_id):
+
+#     conn = sqlite3.connect("attendance.db")
+#     cursor = conn.cursor()
+
+#     cursor.execute("""
+#     SELECT student_name, roll_no
+#     FROM students
+#     WHERE class_id=?
+#     """, (class_id,))
+
+#     students = cursor.fetchall()
+
+#     conn.close()
+
+#     return render_template(
+#         'attendance_camera.html',
+#         class_id=class_id,
+#         students=students
+#     )
+
+# @app.route('/take_attendance/<int:class_id>')
+# def take_attendance(class_id):
+
+#     recognizer = cv2.face.LBPHFaceRecognizer_create()
+#     recognizer.read("face_model.yml")
+
+#     labels = {}
+
+#     with open("labels.txt", "r") as f:
+#         for line in f:
+#             label, name = line.strip().split(",")
+#             labels[int(label)] = name
+
+#     conn = sqlite3.connect("attendance.db")
+#     cursor = conn.cursor()
+
+#     cursor.execute("""
+#     SELECT student_name
+#     FROM students
+#     WHERE class_id=?
+#     """, (class_id,))
+
+#     class_students = [row[0] for row in cursor.fetchall()]
+
+#     face_cascade = cv2.CascadeClassifier(
+#         cv2.data.haarcascades +
+#         'haarcascade_frontalface_default.xml'
+#     )
+
+#     cap = cv2.VideoCapture(0)
+
+#     marked_students = []
+
+#     while True:
+
+#         ret, frame = cap.read()
+
+#         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+#         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+#         for (x, y, w, h) in faces:
+
+#             face = gray[y:y+h, x:x+w]
+#             face = cv2.resize(face, (200, 200))
+
+#             label, confidence = recognizer.predict(face)
+
+#             if confidence < 70:
+
+#                 name = labels[label]
+
+#                 if name in class_students:
+
+#                     if name not in marked_students:
+
+#                         now = datetime.now()
+
+#                         date = now.strftime("%Y-%m-%d")
+#                         time = now.strftime("%H:%M:%S")
+
+#                         cursor.execute("""
+#                         SELECT * FROM attendance
+#                         WHERE student_name=? AND date=?
+#                         """, (name, date))
+
+#                         existing = cursor.fetchone()
+
+#                         if not existing:
+
+#                             cursor.execute("""
+#                             INSERT INTO attendance(student_name,date,time,status)
+#                             VALUES(?,?,?,?)
+#                             """, (name, date, time, "Present"))
+
+#                             conn.commit()
+
+#                         marked_students.append(name)
+
+#                     cv2.putText(
+#                         frame,
+#                         f"{name} Present",
+#                         (x, y-10),
+#                         cv2.FONT_HERSHEY_SIMPLEX,
+#                         0.8,
+#                         (0,255,0),
+#                         2
+#                     )
+
+#             cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),2)
+
+#         cv2.imshow("Attendance", frame)
+
+#         if cv2.waitKey(1) == ord('q'):
+#             break
+
+#     cap.release()
+#     conn.close()
+#     cv2.destroyAllWindows()
+
+#     return "Attendance Completed"
+
+
+
 @app.route('/take_attendance/<int:class_id>')
 def take_attendance(class_id):
 
-    conn = sqlite3.connect("attendance.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    SELECT student_name, roll_no
-    FROM students
-    WHERE class_id=?
-    """, (class_id,))
-
-    students = cursor.fetchall()
-
-    conn.close()
-
     return render_template(
-        'attendance_camera.html',
-        class_id=class_id,
-        students=students
+        "attendance_camera.html",
+        class_id=class_id
     )
 
 
@@ -342,6 +454,23 @@ def reports():
 
 
 # ================= VIEW STUDENTS =================
+# @app.route('/view_students/<int:class_id>')
+# def view_students(class_id):
+
+#     conn = sqlite3.connect("attendance.db")
+#     cursor = conn.cursor()
+
+#     cursor.execute("""
+#     SELECT * FROM students
+#     WHERE class_id=?
+#     """, (class_id,))
+
+#     students = cursor.fetchall()
+
+#     conn.close()
+
+#     return render_template("view_students.html", students=students)
+
 @app.route('/view_students/<int:class_id>')
 def view_students(class_id):
 
@@ -349,7 +478,8 @@ def view_students(class_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT * FROM students
+    SELECT id, student_name, roll_no
+    FROM students
     WHERE class_id=?
     """, (class_id,))
 
@@ -357,7 +487,10 @@ def view_students(class_id):
 
     conn.close()
 
-    return render_template("view_students.html", students=students)
+    return render_template(
+        "view_students.html",
+        students=students
+    )
 
 
 # ================= STUDENT ATTENDANCE =================
@@ -489,6 +622,103 @@ def delete_student(id):
 @app.route('/camera')
 def camera():
     return render_template("camera.html")
+
+import json
+
+
+@app.route('/scan_attendance', methods=['POST'])
+def scan_attendance():
+
+    data = request.get_json()
+
+    image_data = data['image']
+    class_id = data['class_id']
+
+    image_data = image_data.split(",")[1]
+
+    image_bytes = base64.b64decode(image_data)
+
+    np_arr = np.frombuffer(image_bytes, np.uint8)
+
+    img = cv2.imdecode(np_arr, cv2.IMREAD_GRAYSCALE)
+
+
+    recognizer = cv2.face.LBPHFaceRecognizer_create()
+    recognizer.read("face_model.yml")
+
+
+    labels = {}
+
+    with open("labels.txt","r") as f:
+        for line in f:
+            label,name = line.strip().split(",")
+            labels[int(label)] = name
+
+
+    face_cascade = cv2.CascadeClassifier(
+        cv2.data.haarcascades +
+        'haarcascade_frontalface_default.xml'
+    )
+
+
+    faces = face_cascade.detectMultiScale(img,1.3,5)
+
+
+    conn = sqlite3.connect("attendance.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT student_name
+    FROM students
+    WHERE class_id=?
+    """,(class_id,))
+
+    class_students = [row[0] for row in cursor.fetchall()]
+
+
+    for (x,y,w,h) in faces:
+
+        face = img[y:y+h,x:x+w]
+
+        face = cv2.resize(face,(200,200))
+
+        label,confidence = recognizer.predict(face)
+
+        if confidence < 70:
+
+            name = labels[label]
+
+            if name in class_students:
+
+                now = datetime.now()
+
+                date = now.strftime("%Y-%m-%d")
+                time = now.strftime("%H:%M:%S")
+
+                cursor.execute("""
+                SELECT * FROM attendance
+                WHERE student_name=? AND date=?
+                """,(name,date))
+
+                existing = cursor.fetchone()
+
+                if existing:
+                    conn.close()
+                    return f"{name} Already Marked Today"
+
+                cursor.execute("""
+                INSERT INTO attendance(student_name,date,time,status)
+                VALUES(?,?,?,?)
+                """,(name,date,time,"Present"))
+
+                conn.commit()
+                conn.close()
+
+                return f"{name} Attendance Marked Successfully"
+
+    conn.close()
+
+    return "Face Not Recognized"
 
 
 if __name__ == "__main__":
