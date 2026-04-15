@@ -699,31 +699,86 @@ def view_students(class_id):
     )
 
 
+# @app.route('/student_attendance/<int:student_id>')
+# def student_attendance(student_id):
+
+#     conn = sqlite3.connect("attendance.db")
+#     cursor = conn.cursor()
+
+#     # Get Student Info
+#     cursor.execute("""
+#     SELECT student_name, roll_no
+#     FROM students
+#     WHERE id=?
+#     """,(student_id,))
+
+#     student = cursor.fetchone()
+
+#     # Total Present Days
+#     cursor.execute("""
+#     SELECT COUNT(*)
+#     FROM attendance
+#     WHERE student_name=?
+#     """,(student[0],))
+
+#     present_days = cursor.fetchone()[0]
+
+#     # Total Working Days
+#     cursor.execute("""
+#     SELECT COUNT(DISTINCT date)
+#     FROM attendance
+#     """)
+
+#     total_days = cursor.fetchone()[0]
+
+#     if total_days == 0:
+#         percentage = 0
+#     else:
+#         percentage = round((present_days/total_days)*100,2)
+
+#     conn.close()
+
+#     return render_template(
+#         'student_attendance.html',
+#         student=student,
+#         present_days=present_days,
+#         total_days=total_days,
+#         percentage=percentage
+#     )
+
 @app.route('/student_attendance/<int:student_id>')
 def student_attendance(student_id):
 
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
-    # Get Student Info
+    # Get Student Details
     cursor.execute("""
     SELECT student_name, roll_no
     FROM students
     WHERE id=?
-    """,(student_id,))
+    """, (student_id,))
 
     student = cursor.fetchone()
 
-    # Total Present Days
+    # If student not found
+    if not student:
+        conn.close()
+        return "Student Not Found"
+
+    student_name = student[0]
+    roll_no = student[1]
+
+    # Count Present Days
     cursor.execute("""
     SELECT COUNT(*)
     FROM attendance
     WHERE student_name=?
-    """,(student[0],))
+    """, (student_name,))
 
     present_days = cursor.fetchone()[0]
 
-    # Total Working Days
+    # Count Total Working Days
     cursor.execute("""
     SELECT COUNT(DISTINCT date)
     FROM attendance
@@ -731,20 +786,23 @@ def student_attendance(student_id):
 
     total_days = cursor.fetchone()[0]
 
+    # Avoid divide by zero
     if total_days == 0:
         percentage = 0
     else:
-        percentage = round((present_days/total_days)*100,2)
+        percentage = round((present_days / total_days) * 100, 2)
 
     conn.close()
 
     return render_template(
         'student_attendance.html',
-        student=student,
+        student_name=student_name,
+        roll_no=roll_no,
         present_days=present_days,
         total_days=total_days,
         percentage=percentage
     )
+
 
 
 
