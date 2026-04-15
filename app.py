@@ -207,6 +207,16 @@ def logout():
 def register_face_page():
     return redirect('/camera')
 
+@app.route('/register_face', methods=['POST'])
+def register_face():
+
+    name = request.form['student_name']
+
+    return f"{name} Face Registration Started"
+
+
+
+
 @app.route('/train_model')
 def train_model():
 

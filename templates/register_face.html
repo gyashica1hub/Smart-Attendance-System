@@ -2,32 +2,23 @@
 <html>
 <head>
     <title>Register Face</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<div class="form-container">
+<h1>Register Student Face</h1>
 
-<div class="form-card">
+<form method="POST" action="/register_face">
 
-<h1>📸 Register Student Face</h1>
+    <input type="text"
+           name="student_name"
+           placeholder="Student Name"
+           required>
 
-<form method="POST">
-
-<input type="text"
-name="student_name"
-placeholder="Student Name"
-required>
-
-<button type="submit">
-Capture Face
-</button>
+    <button type="submit">
+        Capture Face
+    </button>
 
 </form>
-
-</div>
-
-</div>
 
 </body>
 </html>
