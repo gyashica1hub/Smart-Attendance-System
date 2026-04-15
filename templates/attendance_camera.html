@@ -2,30 +2,100 @@
 <html>
 <head>
     <title>Take Attendance</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Segoe UI',sans-serif;
+        }
+
+        body{
+            background:#dfe7f1;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:100vh;
+        }
+
+        .attendance-box{
+            background:white;
+            padding:40px;
+            width:500px;
+            border-radius:25px;
+            box-shadow:0 10px 30px rgba(0,0,0,0.15);
+            text-align:center;
+        }
+
+        h1{
+            color:#1e3a8a;
+            margin-bottom:30px;
+            font-size:38px;
+        }
+
+        select{
+            width:100%;
+            padding:16px;
+            border:none;
+            border-radius:12px;
+            background:#f3f4f6;
+            font-size:18px;
+            margin-bottom:25px;
+            outline:none;
+        }
+
+        button{
+            width:100%;
+            padding:16px;
+            border:none;
+            border-radius:12px;
+            background:#1e3a8a;
+            color:white;
+            font-size:20px;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        button:hover{
+            background:#142b63;
+        }
+
+        .icon{
+            font-size:40px;
+            margin-bottom:10px;
+        }
+
+    </style>
 </head>
 <body>
 
-<h1>📸 Take Attendance</h1>
+<div class="attendance-box">
 
-<input type="hidden" id="class_id" value="{{ class_id }}">
+    <div class="icon">📸</div>
 
-<select id="student_name">
+    <h1>Take Attendance</h1>
 
-    <option>Select Student</option>
+    <input type="hidden" id="class_id" value="{{ class_id }}">
 
-    {% for student in students %}
-    <option value="{{ student[0] }}">
-        {{ student[0] }} (Roll: {{ student[1] }})
-    </option>
-    {% endfor %}
+    <select id="student_name">
 
-</select>
+        <option value="">Select Student</option>
 
-<br><br>
+        {% for student in students %}
+        <option value="{{ student[0] }}">
+            {{ student[0] }} (Roll: {{ student[1] }})
+        </option>
+        {% endfor %}
 
-<button onclick="markAttendance()">
-Mark Attendance
-</button>
+    </select>
+
+    <button onclick="markAttendance()">
+        Mark Attendance
+    </button>
+
+</div>
 
 <script>
 
@@ -37,7 +107,12 @@ function markAttendance(){
     let class_id =
         document.getElementById("class_id").value;
 
-    fetch('/mark_attendance', {
+    if(student_name==""){
+        alert("Please Select Student");
+        return;
+    }
+
+    fetch('/mark_attendance',{
 
         method:'POST',
 
@@ -46,12 +121,17 @@ function markAttendance(){
         },
 
         body:
-        'student_name=' + student_name +
-        '&class_id=' + class_id
+        'student_name='+student_name+
+        '&class_id='+class_id
     })
 
     .then(res=>res.text())
-    .then(data=>alert(data));
+    .then(data=>{
+
+        alert(data);
+
+    });
+
 }
 
 </script>
