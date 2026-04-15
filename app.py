@@ -487,25 +487,25 @@ def mark_attendance():
 
 
 
-@app.route('/view_students/<int:class_id>')
-def view_students(class_id):
+# @app.route('/view_students/<int:class_id>')
+# def view_students(class_id):
 
-    conn = sqlite3.connect("attendance.db")
-    cursor = conn.cursor()
+#     conn = sqlite3.connect("attendance.db")
+#     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT * FROM students
-        WHERE class_id=?
-    """,(class_id,))
+#     cursor.execute("""
+#         SELECT * FROM students
+#         WHERE class_id=?
+#     """,(class_id,))
 
-    students = cursor.fetchall()
+#     students = cursor.fetchall()
 
-    conn.close()
+#     conn.close()
 
-    return render_template(
-        "class_students.html",
-        students=students
-    )
+#     return render_template(
+#         "class_students.html",
+#         students=students
+#     )
 
 
 @app.route('/register_teacher', methods=['GET','POST'])
