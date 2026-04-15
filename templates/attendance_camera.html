@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Take Attendance</title>
+</head>
+<body>
+
+<h1>📸 Take Attendance</h1>
+
+<input type="hidden" id="class_id" value="{{ class_id }}">
+
+<select id="student_name">
+
+    <option>Select Student</option>
+
+    {% for student in students %}
+    <option value="{{ student[0] }}">
+        {{ student[0] }} (Roll: {{ student[1] }})
+    </option>
+    {% endfor %}
+
+</select>
+
+<br><br>
+
+<button onclick="markAttendance()">
+Mark Attendance
+</button>
+
+<script>
+
+function markAttendance(){
+
+    let student_name =
+        document.getElementById("student_name").value;
+
+    let class_id =
+        document.getElementById("class_id").value;
+
+    fetch('/mark_attendance', {
+
+        method:'POST',
+
+        headers:{
+            'Content-Type':'application/x-www-form-urlencoded'
+        },
+
+        body:
+        'student_name=' + student_name +
+        '&class_id=' + class_id
+    })
+
+    .then(res=>res.text())
+    .then(data=>alert(data));
+}
+
+</script>
+
+</body>
+</html>

@@ -418,18 +418,35 @@ def train_model():
 
 #     return "Attendance Completed!"
 
+
 @app.route('/take_attendance/<int:class_id>')
 def take_attendance(class_id):
 
+    conn = sqlite3.connect("attendance.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT student_name, roll_no
+    FROM students
+    WHERE class_id=?
+    """, (class_id,))
+
+    students = cursor.fetchall()
+
+    conn.close()
+
     return render_template(
         'attendance_camera.html',
-        class_id=class_id
+        class_id=class_id,
+        students=students
     )
+
 
 @app.route('/mark_attendance', methods=['POST'])
 def mark_attendance():
 
     student_name = request.form['student_name']
+    class_id = request.form['class_id']
 
     now = datetime.now()
 
@@ -439,17 +456,33 @@ def mark_attendance():
     conn = sqlite3.connect("attendance.db")
     cursor = conn.cursor()
 
+    # duplicate check
+    cursor.execute("""
+    SELECT * FROM attendance
+    WHERE student_name=? AND date=?
+    """, (student_name, date))
+
+    existing = cursor.fetchone()
+
+    if existing:
+        conn.close()
+        return "Attendance Already Marked Today"
+
     cursor.execute("""
     INSERT INTO attendance(
-    student_name,date,time,status
+        student_name,
+        date,
+        time,
+        status
     )
     VALUES(?,?,?,?)
-    """,(student_name,date,time,"Present"))
+    """, (student_name, date, time, "Present"))
 
     conn.commit()
     conn.close()
 
     return "Attendance Marked Successfully"
+
 
 
 
